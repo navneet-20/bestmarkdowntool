@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Markdown Studio Pro — a fast browser-based Markdown editor with live preview, Mermaid diagrams, KaTeX math, syntax highlighting, templates and a plain-text notepad.">
+<meta name="theme-color" content="#0969da">
+<title>Markdown Studio Pro | webline.cloud</title>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-theme">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+<style>
+:root{
+  --bg:#f6f8fa;--panel:#fff;--panel2:#f6f8fa;--text:#1f2328;--muted:#636c76;
+  --border:#d0d7de;--accent:#0969da;--accent2:#0550ae;--danger:#cf222e;--success:#1a7f37;
+  --shadow:0 8px 30px rgba(31,35,40,.08);--radius:10px;
+}
+[data-theme=dark]{
+  --bg:#0d1117;--panel:#161b22;--panel2:#0d1117;--text:#e6edf3;--muted:#8b949e;
+  --border:#30363d;--accent:#58a6ff;--accent2:#79c0ff;--danger:#ff7b72;--success:#3fb950;
+  --shadow:0 10px 35px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh}
+button,select,input,textarea{font:inherit}
+button,select{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:7px;padding:7px 10px;cursor:pointer}
+button:hover,select:hover{border-color:var(--muted);background:var(--panel2)}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{background:var(--accent2)}
+button.danger{color:var(--danger)}
+button.compact{padding:6px 8px}
+button.icon{min-width:34px;padding:6px 8px}
+header{padding:16px 20px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:3px}
+.brand h1{font-size:20px;line-height:1.15;margin:0}
+.brand small{color:var(--muted);font-size:12px}
+.brand a{color:var(--accent);text-decoration:none;font-weight:600}
+.brand a:hover{text-decoration:underline}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.separator{width:1px;height:26px;background:var(--border);margin:0 2px}
+.workspace{flex:1;display:flex;flex-direction:column;min-height:0;padding:0 20px 10px}
+.editor-toolbar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-bottom:0;border-radius:var(--radius) var(--radius) 0 0;padding:8px}
+.editor-toolbar .spacer{flex:1}
+.tool-label{font-size:11px;color:var(--muted);margin:0 3px}
+.container{display:flex;gap:12px;flex:1;min-height:0;position:relative}
+.pane{min-width:0;min-height:0;overflow:hidden}
+.editor-pane{width:50%;display:flex}
+.preview-pane{width:50%;background:var(--panel);border:1px solid var(--border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:22px;overflow:auto;line-height:1.65}
+.editor-pane textarea{width:100%;height:100%;resize:none;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);background:var(--panel);color:var(--text);padding:18px;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:14px;line-height:1.6;tab-size:2;outline:none}
+.editor-pane textarea:focus{border-color:var(--accent)}
+.hidden{display:none!important}
+.full{width:100%!important}
+.preview-pane h1,.preview-pane h2,.preview-pane h3{border-bottom:1px solid var(--border);padding-bottom:5px;margin:18px 0 12px}
+.preview-pane h1{font-size:1.8rem}.preview-pane h2{font-size:1.45rem}.preview-pane h3{font-size:1.15rem}
+.preview-pane p,.preview-pane ul,.preview-pane ol{margin:0 0 12px}
+.preview-pane ul,.preview-pane ol{padding-left:24px}
+.preview-pane img{max-width:100%;height:auto}
+.preview-pane a{color:var(--accent)}
+.preview-pane blockquote{margin:14px 0;padding:8px 14px;border-left:4px solid var(--accent);color:var(--muted);background:var(--panel2)}
+.preview-pane pre{padding:13px;border-radius:8px;overflow:auto;background:var(--panel2);border:1px solid var(--border);margin:12px 0}
+.preview-pane code{font-family:"SFMono-Regular",Consolas,monospace}
+.preview-pane :not(pre)>code{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:2px 5px}
+.preview-pane table{border-collapse:collapse;width:100%;margin:14px 0}
+.preview-pane th,.preview-pane td{border:1px solid var(--border);padding:8px;text-align:left}
+.preview-pane th{background:var(--panel2)}
+.hash-tag{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);padding:2px 7px;border-radius:12px;font-size:.85em}
+.mermaid{text-align:center;margin:14px 0}
+.status{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;padding:7px 20px 12px}
+.status strong{color:var(--text)}
+#graph-overlay,#outline-overlay,#notepad-overlay{
+  display:none;position:absolute;z-index:50;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);
+  border-radius:10px;overflow:hidden
+}
+#graph-overlay{right:10px;top:10px;width:310px;max-height:75%}
+#outline-overlay{right:10px;top:10px;width:310px;max-height:75%}
+.overlay-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border)}
+.overlay-head strong{font-size:13px}.overlay-body{padding:10px;overflow:auto;max-height:60vh}
+.outline-item{display:block;color:var(--text);text-decoration:none;font-size:13px;padding:5px 7px;border-left:2px solid var(--border);margin:2px 0}
+.outline-item:hover{color:var(--accent);border-color:var(--accent)}
+.level-2{margin-left:12px}.level-3{margin-left:24px}
+#notepad-overlay{left:10px;right:10px;bottom:10px;top:10px;display:none;flex-direction:column}
+#notepad-overlay.open{display:flex}
+.notepad-wrap{display:flex;flex:1;min-height:0;padding:12px}
+#notepad-input{flex:1;width:100%;resize:none;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--text);padding:15px;font:14px/1.6 "SFMono-Regular",Consolas,monospace;outline:none}
+#notepad-input:focus{border-color:var(--accent)}
+.empty{color:var(--muted);font-size:13px;padding:10px}
+body.zen-mode header,body.zen-mode .editor-toolbar,body.zen-mode .status{display:none}
+body.zen-mode .workspace{padding:0}
+#exit-zen{display:none;position:fixed;right:18px;top:18px;z-index:100;background:var(--danger);color:#fff;border:0;border-radius:20px}
+body.zen-mode #exit-zen{display:block}
+#toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,15px);background:var(--text);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:1000}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:850px){
+  body{padding:0}
+  header{padding:12px}
+  .workspace{padding:0 10px 8px}
+  .container{gap:8px}
+  .editor-pane,.preview-pane{width:50%}
+  .editor-toolbar{overflow-x:auto;flex-wrap:nowrap}
+  .editor-toolbar .spacer{display:none}
+  .status{padding:7px 12px 10px}
+  .brand h1{font-size:18px}
+  .toolbar{width:100%}
+}
+@media(max-width:650px){
+  .container{display:block;overflow:auto}
+  .editor-pane,.preview-pane{width:100%;height:50%;min-height:280px}
+  .preview-pane{border-radius:0 0 var(--radius) var(--radius);margin-top:8px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Markdown Studio Pro</h1>
+    <small>Crafted by <a href="https://navneet.webline.cloud" target="_blank" rel="noopener">Navneet Kumar</a> · A tool by <a href="https://webline.cloud" target="_blank" rel="noopener">webline.cloud</a></small>
+  </div>
+  <div class="toolbar">
+    <button onclick="setView('editor')" title="Editor only">📝 Editor</button>
+    <button onclick="setView('split')" title="Editor and preview">🌗 Split</button>
+    <button onclick="setView('preview')" title="Preview only">📖 Preview</button>
+    <button onclick="toggleZen()">🧘 Zen</button>
+    <button onclick="toggleOutline()">☰ Outline</button>
+    <button onclick="toggleNotepad()">🗒️ Notepad</button>
+    <select id="template-select" onchange="loadTemplate(this.value)" aria-label="Templates">
+      <option value="">📋 Templates</option>
+      <option value="default">Welcome</option>
+      <option value="tech">Tech & Math</option>
+      <option value="meeting">Meeting Notes</option>
+    </select>
+    <button onclick="document.getElementById('file-import').click()">📁 Import</button>
+    <input id="file-import" type="file" accept=".md,.markdown,.txt" hidden onchange="importFile(event)">
+    <button onclick="exportMD()">💾 Export</button>
+    <button onclick="copyMarkdown()">📋 Copy</button>
+    <button class="danger" onclick="clearEditor()">🗑️ Clear</button>
+    <button class="primary" onclick="toggleTheme()" id="theme-btn">🌙 Theme</button>
+  </div>
+</header>
+
+<button id="exit-zen" onclick="toggleZen()">❌ Exit Zen (ESC)</button>
+
+<main class="workspace">
+  <div class="editor-toolbar">
+    <button class="icon" onclick="format('**','**')" title="Bold"><b>B</b></button>
+    <button class="icon" onclick="format('*','*')" title="Italic"><i>I</i></button>
+    <button onclick="formatLine('# ')">H1</button>
+    <button onclick="formatLine('## ')">H2</button>
+    <button onclick="formatLine('### ')">H3</button>
+    <button onclick="formatLine('- ')">• List</button>
+    <button onclick="formatLine('1. ')">1. List</button>
+    <button onclick="formatLine('> ')">Quote</button>
+    <button onclick="format('`','`')">Code</button>
+    <button onclick="format('```\n','\n```')">Code Block</button>
+    <button onclick="format('$$\n','\n$$')">Math</button>
+    <button onclick="format('```mermaid\n','\n```')">Diagram</button>
+    <span class="separator"></span>
+    <button onclick="insertLink()">🔗 Link</button>
+    <button onclick="insertTable()">▦ Table</button>
+    <button onclick="findText()">🔎 Find</button>
+    <button onclick="selectAllText()">Select All</button>
+    <span class="spacer"></span>
+    <span class="tool-label">Ctrl+S save · Ctrl+F find · Ctrl+Shift+N notepad · Esc zen</span>
+  </div>
+
+  <div class="container">
+    <div class="pane editor-pane" id="editor-pane">
+      <textarea id="markdown-input" spellcheck="false" placeholder="Start writing Markdown..."></textarea>
+    </div>
+    <div class="pane preview-pane" id="preview-pane"></div>
+
+    <section id="outline-overlay">
+      <div class="overlay-head"><strong>Document Outline</strong><button class="compact" onclick="toggleOutline()">✕</button></div>
+      <div class="overlay-body" id="outline-content"></div>
+    </section>
+
+    <section id="notepad-overlay">
+      <div class="overlay-head">
+        <strong>Plain Text Notepad</strong>
+        <div class="toolbar">
+          <button onclick="clearNotepad()" class="danger">🗑️ Clear Notepad</button>
+          <button onclick="closeNotepad()">✕ Close</button>
+        </div>
+      </div>
+      <div class="notepad-wrap">
+        <textarea id="notepad-input" spellcheck="false" placeholder="Quick notes... This is plain text only."></textarea>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="status">
+  <span id="stats">Words: 0 · Chars: 0 · 0 min read</span>
+  <span>
+    <label><input type="checkbox" id="sync-scroll" checked> Sync scroll</label>
+    · <strong id="save-status">Saved locally</strong>
+  </span>
+</div>
+<div id="toast"></div>
+
+<script>
+const input = document.getElementById('markdown-input');
+const preview = document.getElementById('preview-pane');
+const notepad = document.getElementById('notepad-input');
+let saveTimer;
+
+const templates = {
+default:`# Welcome to Markdown Studio Pro
+
+Built by Navneet Kumar for webline.cloud.
+
+## Features
+
+- Live Markdown preview
+- Syntax highlighted code
+- KaTeX mathematics
+- Mermaid diagrams
+- Document outline
+- Plain-text notepad
+- Import and export
+- Local autosave
+
+## Quick Start
+
+Start typing on the left and your rendered document appears on the right.
+
+[[TOC]]`,
+tech:`# System Architecture #tech/docs/v2
+
+Testing Markdown, mathematics and diagrams.
+
+[[TOC]]
+
+## 1. Formula
+
+$$
+x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
+$$
+
+## 2. Server Architecture
+
+\`\`\`mermaid
+graph TD;
+  Client-->LoadBalancer;
+  LoadBalancer-->Node1;
+  LoadBalancer-->Node2;
+  Node1-->Database;
+  Node2-->Database;
+\`\`\``,
+meeting:`# Weekly Sync #meetings
+
+**Date:** ${new Date().toLocaleDateString()}  
+**Lead:** Navneet
+
+## Agenda
+
+1. Review open items
+2. Discuss deployments
+3. Plan next actions
+
+## Action Items
+
+- [ ] Follow up on pending work
+- [ ] Review changes
+- [ ] Update documentation`
+};
+
+marked.setOptions({gfm:true, breaks:true});
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderMarkdown(raw){
+  let text=raw;
+  const headings=[];
+  text=text.replace(/^(#{1,3})\s+(.+)$/gm,(m,hash,title)=>{
+    const clean=title.replace(/#[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*/g,'').trim();
+    headings.push({level:hash.length,title:clean||title});
+    return m;
+  });
+  text=text.replace(/(^|[\s(])#([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*)/g,(m,p,t)=>p+'<span class="hash-tag">#'+t+'</span>');
+  if(text.includes('[[TOC]]')){
+    const toc=headings.map((h,i)=>`${'  '.repeat(h.level-1)}- [${h.title}](#heading-${i})`).join('\n');
+    text=text.replace('[[TOC]]','### Table of Contents\n'+toc);
+  }
+  let html=marked.parse(text);
+  let headingIndex=0;
+  html=html.replace(/<h([1-3])>(.*?)<\/h\1>/g,(m,l,t)=>`<h${l} id="heading-${headingIndex++}">${t}</h${l}>`);
+  return {html,headings};
+}
+
+async function updateAll(){
+  const raw=input.value;
+  const result=renderMarkdown(raw);
+  preview.innerHTML=result.html;
+  updateStats(raw);
+  updateOutline(result.headings);
+  if(window.renderMathInElement){
+    renderMathInElement(preview,{delimiters:[
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ],throwOnError:false});
+  }
+  try{
+    document.querySelectorAll('.mermaid').forEach((el,i)=>el.setAttribute('id','mermaid-'+Date.now()+'-'+i));
+    await mermaid.run({nodes:document.querySelectorAll('.mermaid')});
+  }catch(e){}
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    localStorage.setItem('md_studio_content',input.value);
+    document.getElementById('save-status').textContent='Saved locally';
+  },250);
+}
+
+function updateStats(text){
+  const words=text.trim()?text.trim().split(/\s+/).length:0;
+  const mins=words?Math.max(1,Math.ceil(words/200)):0;
+  document.getElementById('stats').textContent=`Words: ${words} · Chars: ${text.length} · ${mins} min read`;
+}
+
+function updateOutline(headings){
+  const box=document.getElementById('outline-content');
+  box.innerHTML=headings.length?headings.map((h,i)=>`<a href="#heading-${i}" class="outline-item level-${h.level}" onclick="toggleOutline()">${escapeHtml(h.title)}</a>`).join('')
+    :'<div class="empty">No H1–H3 headings yet.</div>';
+}
+
+function toggleOutline(){
+  const el=document.getElementById('outline-overlay');
+  el.style.display=el.style.display==='block'?'none':'block';
+}
+function toggleNotepad(){
+  document.getElementById('notepad-overlay').classList.toggle('open');
+  if(document.getElementById('notepad-overlay').classList.contains('open')) notepad.focus();
+}
+function closeNotepad(){document.getElementById('notepad-overlay').classList.remove('open')}
+function clearNotepad(){
+  notepad.value='';
+  localStorage.removeItem('md_studio_notepad');
+  notepad.focus();
+  toast('Notepad cleared');
+}
+function clearEditor(){
+  input.value='';
+  localStorage.removeItem('md_studio_content');
+  updateAll();
+  input.focus();
+  toast('Document cleared');
+}
+function loadTemplate(key){
+  if(!key)return;
+  input.value=templates[key];
+  document.getElementById('template-select').value='';
+  updateAll(); input.focus(); toast('Template loaded');
+}
+function format(before,after=''){
+  const start=input.selectionStart,end=input.selectionEnd,selected=input.value.slice(start,end);
+  input.setRangeText(before+selected+after,start,end,'end');
+  if(after) input.setSelectionRange(start+before.length,start+before.length+selected.length);
+  updateAll(); input.focus();
+}
+function formatLine(prefix){
+  const start=input.selectionStart;
+  const lineStart=input.value.lastIndexOf('\n',start-1)+1;
+  input.setRangeText(prefix,lineStart,lineStart,'end');
+  updateAll(); input.focus();
+}
+function insertLink(){
+  const selected=input.value.slice(input.selectionStart,input.selectionEnd)||'link text';
+  format(`[${selected}](`,')');
+}
+function insertTable(){
+  const table=`| Column 1 | Column 2 | Column 3 |
+| --- | --- | --- |
+| Value | Value | Value |
+| Value | Value | Value |`;
+  const p=input.selectionStart;
+  input.setRangeText(table,p,p,'end'); updateAll(); input.focus();
+}
+function selectAllText(){input.focus();input.select()}
+function findText(){
+  const term=prompt('Find text:');
+  if(!term)return;
+  const start=input.selectionEnd;
+  const idx=input.value.toLowerCase().indexOf(term.toLowerCase(),start);
+  const found=idx>=0?idx:input.value.toLowerCase().indexOf(term.toLowerCase());
+  if(found>=0){input.focus();input.setSelectionRange(found,found+term.length)}
+  else toast('Text not found');
+}
+function copyMarkdown(){
+  navigator.clipboard?.writeText(input.value).then(()=>toast('Markdown copied')).catch(()=>toast('Copy unavailable'));
+}
+function exportMD(){
+  const blob=new Blob([input.value],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='document_webline_cloud.md';a.click();
+  URL.revokeObjectURL(a.href);toast('Markdown exported');
+}
+function importFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{input.value=ev.target.result;updateAll();toast('File imported')};
+  reader.readAsText(file);e.target.value='';
+}
+function setView(mode){
+  const ed=document.getElementById('editor-pane');
+  if(mode==='editor'){ed.classList.remove('hidden');preview.classList.add('hidden');ed.classList.add('full')}
+  else if(mode==='preview'){ed.classList.add('hidden');preview.classList.remove('hidden');preview.classList.add('full')}
+  else{ed.classList.remove('hidden');preview.classList.remove('hidden');ed.classList.remove('full');preview.classList.remove('full')}
+}
+function toggleZen(){document.body.classList.toggle('zen-mode')}
+function toggleTheme(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  applyTheme(dark?'light':'dark');
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem('md_studio_theme',theme);
+  document.getElementById('theme-btn').textContent=theme==='dark'?'☀️ Light':'🌙 Theme';
+  document.getElementById('highlight-theme').href=theme==='dark'
+    ?'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+    :'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+  mermaid.initialize({startOnLoad:false,theme:theme==='dark'?'dark':'default'});
+  updateAll();
+}
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+input.addEventListener('input',updateAll);
+input.addEventListener('scroll',()=>{
+  const sync=document.getElementById('sync-scroll').checked;
+  if(!sync)return;
+  const denom=input.scrollHeight-input.clientHeight;
+  if(denom<=0)return;
+  preview.scrollTop=(input.scrollTop/denom)*Math.max(0,preview.scrollHeight-preview.clientHeight);
+});
+input.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    input.setRangeText('  ',input.selectionStart,input.selectionEnd,'end');
+    updateAll();return;
+  }
+  const pairs={'(':')','[':']','{':'}','`':'`'};
+  if(pairs[e.key] && input.selectionStart===input.selectionEnd){
+    e.preventDefault();
+    const p=input.selectionStart;
+    input.setRangeText(e.key+pairs[e.key],p,p,'end');
+    input.setSelectionRange(p+1,p+1);
+    updateAll();
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
+    e.preventDefault();localStorage.setItem('md_studio_content',input.value);toast('Saved locally');
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){
+    e.preventDefault();findText();
+  }
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='n'){
+    e.preventDefault();toggleNotepad();
+  }
+});
+notepad.addEventListener('input',()=>localStorage.setItem('md_studio_notepad',notepad.value));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.body.classList.contains('zen-mode'))toggleZen();
+});
+window.addEventListener('DOMContentLoaded',()=>{
+  const theme=localStorage.getItem('md_studio_theme')||'light';
+  applyTheme(theme);
+  input.value=localStorage.getItem('md_studio_content') ?? templates.default;
+  notepad.value=localStorage.getItem('md_studio_notepad')||'';
+  updateAll();
+});
+</script>
+</body>
+</html>
